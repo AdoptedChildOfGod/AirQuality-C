@@ -13,11 +13,13 @@ class SRDStatesListViewController: UIViewController {
     // MARK: - Outlets
     
     @IBOutlet weak var statesTableView: UITableView!
+    @IBOutlet weak var statesSearchBar: UISearchBar!
     
     // MARK: - Properties
     
     var country: String?
-    var states: [String] = [] { didSet { statesTableView.reloadData() } }
+    var states: [String] = [] { didSet { displayStates = states } }
+    var displayStates: [String] = [] { didSet { statesTableView.reloadData() } }
     
     // MARK: - Lifecycle Methods
     
@@ -26,6 +28,7 @@ class SRDStatesListViewController: UIViewController {
         
         statesTableView.delegate = self
         statesTableView.dataSource = self
+        statesSearchBar.delegate = self
         
         // Get the states data from the api
         guard let country = country else { return }
@@ -45,7 +48,7 @@ class SRDStatesListViewController: UIViewController {
                 else { return }
             
             destinationVC.country = country
-            destinationVC.state = states[indexPath.row]
+            destinationVC.state = displayStates[indexPath.row]
         }
     }
 }
@@ -53,15 +56,23 @@ class SRDStatesListViewController: UIViewController {
 extension SRDStatesListViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return states.count
+        return displayStates.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "stateCell", for: indexPath)
         
-        let state = states[indexPath.row]
+        let state = displayStates[indexPath.row]
         cell.textLabel?.text = state
         
         return cell
+    }
+}
+
+extension SRDStatesListViewController: UISearchBarDelegate {
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchText.isEmpty { displayStates = states }
+        else { displayStates = states.filter { $0.lowercased().contains(searchText.lowercased()) } }
     }
 }

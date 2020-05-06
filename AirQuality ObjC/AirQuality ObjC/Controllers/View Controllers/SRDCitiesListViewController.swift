@@ -13,12 +13,14 @@ class SRDCitiesListViewController: UIViewController {
     // MARK: - Outlets
 
     @IBOutlet weak var citiesTableView: UITableView!
+    @IBOutlet weak var citiesSearchBar: UISearchBar!
     
     // MARK: - Properties
     
     var country: String?
     var state: String?
-    var cities: [String] = [] { didSet { citiesTableView.reloadData() } }
+    var cities: [String] = [] { didSet { displayCities = cities } }
+    var displayCities: [String] = [] { didSet { citiesTableView.reloadData() } }
     
     // MARK: - Lifecycle Methods
     
@@ -27,6 +29,7 @@ class SRDCitiesListViewController: UIViewController {
 
         citiesTableView.delegate = self
         citiesTableView.dataSource = self
+        citiesSearchBar.delegate = self
         
         // Get the cities data from the api
         guard let country = country, let state = state else { return }
@@ -47,7 +50,7 @@ class SRDCitiesListViewController: UIViewController {
             
             destinationVC.country = country
             destinationVC.state = state
-            destinationVC.city = cities[indexPath.row]
+            destinationVC.city = displayCities[indexPath.row]
         }
     }
 }
@@ -55,15 +58,23 @@ class SRDCitiesListViewController: UIViewController {
 extension SRDCitiesListViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return cities.count
+        return displayCities.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cityCell", for: indexPath)
         
-        let city = cities[indexPath.row]
+        let city = displayCities[indexPath.row]
         cell.textLabel?.text = city
         
         return cell
     }
+}
+
+extension SRDCitiesListViewController: UISearchBarDelegate {
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+           if searchText.isEmpty { displayCities = cities }
+           else { displayCities = cities.filter { $0.lowercased().contains(searchText.lowercased()) } }
+       }
 }
